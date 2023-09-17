@@ -19,6 +19,8 @@ struct CreateAddressTable: AsyncMigration {
             .field(Address.v1092023.state, .string)
             .field(Address.v1092023.pincode, .string)
             .field(Address.v1092023.country, .string)
+            .field(Address.v1092023.userID, .uuid, .required, .references("users", "id"))
+
             .create()
     }
     func revert(on database: Database) async throws {
@@ -39,7 +41,7 @@ extension Address {
     static let state = FieldKey(stringLiteral: "state")
     static let pincode = FieldKey(stringLiteral: "pincode")
     static let country = FieldKey(stringLiteral: "country")
-
+    static let userID = FieldKey(stringLiteral: "userID")
    
   }
 }

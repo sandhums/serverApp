@@ -6,3 +6,13 @@
 //
 
 import Foundation
+
+enum Roles: String, Codable {
+    
+    case admin
+    case manager
+    case patient
+    case doctor
+    case nurse
+    case labtechnician
+}
