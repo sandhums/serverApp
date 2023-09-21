@@ -21,19 +21,25 @@ class AddressController: RouteCollection {
             guard let userId = req.parameters.get("userId", as: UUID.self) else {
                 throw Abort(.badRequest)
             }
+//            guard let user = try await User.find(userId, on: req.db) else {
+//                throw Abort(.notFound)
+//            }
+//            guard let userAddress = User.query(on: req.db).with(\.$address)
+//                else {
+//                    throw Abort(.notFound)
+//                }
             
-            // DTO for the request
-//            let groceryCategoryRequestDTO = try req.content.decode(GroceryCategoryRequestDTO.self)
+//            try await userAddress.$user.load(on: req.db)
+            
+
             let data = try req.content.decode(createAddressData.self)
-            
+          
+
             let address = Address(addressline1: data.add1, addressline2: data.add2, city: data.city, state: data.state, pincode: data.pincode, country: data.country, userID: userId)
-//            let groceryCategory = GroceryCategory(title: groceryCategoryRequestDTO.title, colorCode: groceryCategoryRequestDTO.colorCode, userId: userId)
+
             
              try await address.save(on: req.db)
             
-//            guard let groceryCategoryResponseDTO = GroceryCategoryResponseDTO(groceryCategory) else {
-//                throw Abort(.internalServerError)
-//            }
             
             // DTO for the response
             return address
@@ -49,5 +55,4 @@ struct createAddressData: Content {
     let state: String
     let pincode: String
     let country: String
-    let userID: UUID
 }

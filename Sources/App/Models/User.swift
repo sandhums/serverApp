@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Manjinder Sandhu on 12/09/23.
 //
@@ -43,20 +43,63 @@ final class User: Model, Content, Validatable {
     @OptionalField(key: "roles")
     var roles: [Roles]?
     
-//    @Group(key: "address")
+    //    @Group(key: "address")
+    //    var address: Address?
+    
+    @OptionalField(key: "profilepicture")
+    var profilepicture: String?
+    
+//    
+//    @OptionalChild(for: \.$user)
 //    var address: Address?
     
-    @OptionalChild(for: \.$user)
-    var address: Address?
-
     
     init() {}
     
-    init(id: UUID? = nil, email: String, password: String) {
-      self.id = id
-      self.email = email
-      self.password = password
-     
+    init(id: UUID? = nil, prefix: String? = nil, firstname: String? = nil, lastname: String? = nil, suffix: String? = nil, email: String, password: String, mobile: String? = nil, roles: [Roles] = [], profilepicture: String? = nil) {
+        self.id = id
+        self.prefix = prefix
+        self.firstname = firstname
+        self.lastname = lastname
+        self.suffix = suffix
+        self.email = email
+        self.password = password
+        self.mobile = mobile
+        self.roles = roles
+        self.profilepicture = profilepicture
+        
+    }
+    
+    init(prefix: String? = nil, firstname: String? = nil, lastname: String? = nil, suffix: String? = nil, mobile: String? = nil, roles: [Roles] = [], profilepicture: String? = nil) {
+      
+        self.prefix = prefix
+        self.firstname = firstname
+        self.lastname = lastname
+        self.suffix = suffix
+        self.mobile = mobile
+        self.roles = roles
+        self.profilepicture = profilepicture
+        
+    }
+    
+    final class Public: Content {
+        var id: UUID?
+        var prefix: String
+        var firstname: String
+        var lastname: String
+        var suffix: String
+        var mobile: String
+        var profilepicture: String
+        
+        init(id: UUID? = nil, prefix: String, firstname: String, lastname: String, suffix: String, mobile: String, profilepicture: String) {
+            self.id = id
+            self.prefix = prefix
+            self.firstname = firstname
+            self.lastname = lastname
+            self.suffix = suffix
+            self.mobile = mobile
+            self.profilepicture = profilepicture
+        }
     }
     
     static func validations(_ validations: inout Vapor.Validations) {
@@ -65,5 +108,47 @@ final class User: Model, Content, Validatable {
         validations.add("password", as: String.self, is: .count(6...10), customFailureDescription: "password has to be between 6 and 10 characters")
     }
 }
+
+
+extension User {
+  // 1
+    func convertToPublic() -> User.Public {
+    // 2
+        return User.Public(id: id, prefix: prefix ?? "", firstname: firstname ?? "", lastname: lastname ?? "", suffix: suffix ?? "", mobile: mobile ?? "", profilepicture: profilepicture ?? "")
+  }
+}
+
+// 1
+extension EventLoopFuture where Value: User {
+  // 2
+  func convertToPublic() -> EventLoopFuture<User.Public> {
+    // 3
+    return self.map { user in
+      // 4
+      return user.convertToPublic()
+    }
+  }
+}
+
+// 5
+extension Collection where Element: User {
+  // 6
+  func convertToPublic() -> [User.Public] {
+    // 7
+    return self.map { $0.convertToPublic() }
+  }
+}
+
+// 8
+extension EventLoopFuture where Value == Array<User> {
+  // 9
+  func convertToPublic() -> EventLoopFuture<[User.Public]> {
+    // 10
+    return self.map { $0.convertToPublic() }
+  }
+}
+
+
+
 
 

@@ -8,6 +8,7 @@
 import Foundation
 import Vapor
 import Fluent
+import HISSharedDTO
 
 
 class UserController: RouteCollection {
@@ -15,13 +16,17 @@ class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         
         let his = routes.grouped("his")
+        let hisusers = routes.grouped("his", "users")
         
         // /api/register
         his.post("register", use: register)
-        
-        his.get("users", use: getAllUsers)
         // /api/login
         his.post("login", use: login)
+        
+        his.get("users", use: getAllUsers)
+        
+        hisusers.patch(":userId", use: updateUser)
+      
         
         func login (req: Request) async throws -> LoginResponseDTO {
             
@@ -70,6 +75,41 @@ class UserController: RouteCollection {
           // 2
           try await User.query(on: req.db).all()
         }
+        func updateUser(_ req: Request) async throws -> User.Public {
+            
+            guard let userId = req.parameters.get("userId", as: UUID.self) else {
+                throw Abort(.badRequest)
+            }
+            guard let user = try await User.find(userId, on: req.db) else {
+                throw Abort(.notFound)
+            }
+            let userUpdateDTO = try req.content.decode(UserUpdateDTO.self)
+            
+            if let prefix = userUpdateDTO.prefix {
+                user.prefix = prefix
+              }
+            
+            if let firstname = userUpdateDTO.firstname {
+                  user.firstname = firstname
+              }
+              // If new last name was supplied, update it.
+            if let lastname = userUpdateDTO.lastname {
+                  user.lastname = lastname
+              }
+            if let suffix = userUpdateDTO.suffix {
+                user.suffix = suffix
+              }
+            if let mobile = userUpdateDTO.mobile {
+                user.mobile = mobile
+              }
+            if let profilepicture = userUpdateDTO.profilepicture {
+                user.profilepicture = profilepicture              }
+           
+            try await user.save(on: req.db)
+            return user.convertToPublic()
+            
+        }
+
     }
 }
 

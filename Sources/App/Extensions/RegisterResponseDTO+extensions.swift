@@ -6,3 +6,9 @@
 //
 
 import Foundation
+import Vapor
+import HISSharedDTO
+
+extension RegisterResponseDTO: Content {
+    
+}
