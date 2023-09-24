@@ -16,7 +16,7 @@ class UserController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         
         let his = routes.grouped("his")
-        let hisusers = routes.grouped("his", "users")
+        let hisusers = routes.grouped("his", "users", ":userId").grouped(JSONWebTokenAuthenticator())
         
         // /api/register
         his.post("register", use: register)
@@ -25,7 +25,8 @@ class UserController: RouteCollection {
         
         his.get("users", use: getAllUsers)
         
-        hisusers.patch(":userId", use: updateUser)
+        hisusers.patch("update", use: updateUser)
+        hisusers.get("getprofile", use: getUserProfile)
       
         
         func login (req: Request) async throws -> LoginResponseDTO {
@@ -109,7 +110,21 @@ class UserController: RouteCollection {
             return user.convertToPublic()
             
         }
-
+        func getUserProfile (_ req: Request) async throws -> User.Public {
+            
+            guard let userId = req.parameters.get("userId", as: UUID.self) else {
+                throw Abort(.badRequest)
+            }
+            guard let user = try await User.find(userId, on: req.db) else {
+                throw Abort(.notFound)
+            }
+//            let userUpdateDTO = try user.
+//              try await User.query(on: req.db)
+//                .filter(\.$id == userId)
+//                .first()
+            return user.convertToPublic()
+                
+        }
     }
 }
 

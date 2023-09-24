@@ -6,8 +6,10 @@
 //
 
 import Foundation
+import Vapor
 
-public struct UserUpdateDTO: Codable {
+
+public struct UserUpdateDTO: Content {
     
     public var prefix: String?
     public var firstname: String?
