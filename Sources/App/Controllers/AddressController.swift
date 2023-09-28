@@ -11,31 +11,36 @@ import Fluent
 
 class AddressController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
-       let his = routes.grouped("his", "users", ":userId")
-        
+        let his = routes.grouped("his", "users", ":userId").grouped(JSONWebTokenAuthenticator())
+        his.get("address", use: getAddress)
         his.post("address", use: saveAddress)
+        his.put("address", use: updateAddress)
+        }
         
+    
+    func getAddress(req: Request) async throws -> Address {
+        
+        guard let userId = req.parameters.get("userId", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+
+      guard let address = try await Address.query(on: req.db)
+            .filter(\.$user.$id == userId)
+            .first() else {
+          throw Abort(.notFound)
+      }
+        return address
+    }
         func saveAddress(req: Request) async throws -> Address {
-            
+            // MARK: TODO - fix Abort.badrequest
             // get the userId
             guard let userId = req.parameters.get("userId", as: UUID.self) else {
                 throw Abort(.badRequest)
             }
-//            guard let user = try await User.find(userId, on: req.db) else {
-//                throw Abort(.notFound)
-//            }
-//            guard let userAddress = User.query(on: req.db).with(\.$address)
-//                else {
-//                    throw Abort(.notFound)
-//                }
-            
-//            try await userAddress.$user.load(on: req.db)
-            
-
-            let data = try req.content.decode(createAddressData.self)
+            let data = try req.content.decode(UserAddressDTO.self)
           
 
-            let address = Address(addressline1: data.add1, addressline2: data.add2, city: data.city, state: data.state, pincode: data.pincode, country: data.country, userID: userId)
+            let address = Address(addressline1: data.addressline1 ?? "", addressline2: data.addressline2 ?? "", city: data.city ?? "", state: data.state ?? "", pincode: data.pincode ?? "", country: data.country ?? "", userID: userId)
 
             
              try await address.save(on: req.db)
@@ -45,14 +50,42 @@ class AddressController: RouteCollection {
             return address
             
         }
+    func updateAddress(req: Request) async throws -> Address {
+        
+        // get the userId
+        guard let userId = req.parameters.get("userId", as: UUID.self) else {
+            throw Abort(.badRequest)
+        }
+        guard let address = try await Address.query(on: req.db).filter(\.$user.$id == userId).first() else {
+            throw Abort(.notFound)
+        }
+    
+        let data = try req.content.decode(UserAddressDTO.self)
+        
+        if let addressline1 = data.addressline1 {
+            address.addressline1 = addressline1
+          }
+        if let addressline2 = data.addressline2 {
+            address.addressline2 = addressline2
+          }
+        if let city = data.city{
+            address.city = city
+          }
+        if let state = data.state {
+            address.state = state
+          }
+        if let pincode = data.pincode {
+            address.pincode = pincode
+          }
+        if let country = data.country {
+            address.country = country
+          }
+        try await address.update(on: req.db)
+        
+        
+        // DTO for the response
+        return address
+        
     }
-}
+    }
 
-struct createAddressData: Content {
-    let add1: String
-    let add2: String
-    let city: String
-    let state: String
-    let pincode: String
-    let country: String
-}

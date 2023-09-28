@@ -118,10 +118,6 @@ class UserController: RouteCollection {
             guard let user = try await User.find(userId, on: req.db) else {
                 throw Abort(.notFound)
             }
-//            let userUpdateDTO = try user.
-//              try await User.query(on: req.db)
-//                .filter(\.$id == userId)
-//                .first()
             return user.convertToPublic()
                 
         }

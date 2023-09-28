@@ -19,7 +19,7 @@ struct CreateAddressTable: AsyncMigration {
             .field(Address.v1092023.state, .string)
             .field(Address.v1092023.pincode, .string)
             .field(Address.v1092023.country, .string)
-            .field(Address.v1092023.userID, .uuid, .required, .references("users", "id"))
+            .field(Address.v1092023.userID, .uuid, .required, .references("users", "id")).unique(on: Address.v1092023.userID)
 
             .create()
     }

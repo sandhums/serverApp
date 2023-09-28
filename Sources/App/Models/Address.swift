@@ -9,7 +9,7 @@ import Foundation
 import Fluent
 import Vapor
 
-final class Address: Model, Content {
+final class Address: Model, Content, Validatable {
     
     static let schema = "addresses"
     
@@ -49,5 +49,11 @@ final class Address: Model, Content {
         self.country = country
         self.$user.id = userID
     
+    }
+    static func validations(_ validations: inout Validations) {
+        
+        validations.add("addressline1", as: String.self, is: !.empty, customFailureDescription: "Address cannot be empty.")
+        validations.add("country", as: String.self, is: !.empty, customFailureDescription: "Country code cannot be empty.")
+        
     }
 }
